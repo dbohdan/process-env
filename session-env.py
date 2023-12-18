@@ -7,7 +7,7 @@ import shlex
 import psutil
 
 SESSION = "mate-session"
-VARS = ["DBUS_SESSION_BUS_ADDRESS", "DISPLAY"]
+VARS = ["DBUS_SESSION_BUS_ADDRESS", "DISPLAY", "SSH_AUTH_SOCK"]
 
 
 def pgrep(user: str, program: str) -> list[psutil.Process]:
