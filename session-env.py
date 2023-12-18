@@ -1,13 +1,19 @@
 #! /usr/bin/env python3
+
 from __future__ import annotations
 
+import argparse
 import os
 import shlex
+import subprocess as sp
+from typing import Literal, assert_never
 
 import psutil
 
 SESSION = "mate-session"
 VARS = ["DBUS_SESSION_BUS_ADDRESS", "DISPLAY", "SSH_AUTH_SOCK"]
+
+Shell = Literal["fish", "posix"]
 
 
 def pgrep(user: str, program: str) -> list[psutil.Process]:
@@ -16,7 +22,44 @@ def pgrep(user: str, program: str) -> list[psutil.Process]:
     ]
 
 
+def fish_quote(s: str) -> str:
+    return sp.run(
+        ["fish", "-c", 'string escape "$argv[1]"', s],
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.rstrip()
+
+
+def quote_var(name: str, value: str, *, shell: Shell) -> str:
+    match shell:
+        case "fish":
+            return f"set -x {fish_quote(name)} {fish_quote(value)}"
+        case "posix":
+            return f"export {shlex.quote(name)}={shlex.quote(value)}"
+        case _ as unreachable:
+            assert_never(unreachable)
+
+
+def cli() -> Shell:
+    parser = argparse.ArgumentParser(
+        description="Print environment variables of "
+        "the current user's desktop session that other sessions want.",
+    )
+
+    parser.add_argument(
+        "shell",
+        choices=["fish", "posix"],
+        help="what shell to print variables for",
+    )
+
+    args = parser.parse_args()
+    return args.shell
+
+
 def main() -> None:
+    shell = cli()
+
     username = os.environ["USER"]
     session_procs = pgrep(username, SESSION)
 
@@ -31,7 +74,7 @@ def main() -> None:
 
     env = session.environ()
     for var in VARS:
-        print(f"{var}={shlex.quote(env[var])}")
+        print(quote_var(var, env[var], shell=shell))
 
 
 if __name__ == "__main__":
