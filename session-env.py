@@ -43,14 +43,14 @@ def quote_var(name: str, value: str, *, shell: Shell) -> str:
 
 def cli() -> Shell:
     parser = argparse.ArgumentParser(
-        description="Print environment variables of "
-        "the current user's desktop session that other sessions want.",
+        description="Print shell commands to set environment variables like "
+        "`DISPLAY` to those of the current user's desktop session.",
     )
 
     parser.add_argument(
         "shell",
         choices=["fish", "posix"],
-        help="what shell to print variables for",
+        help="what shell to print commands for",
     )
 
     args = parser.parse_args()
