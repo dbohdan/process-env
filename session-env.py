@@ -65,10 +65,10 @@ def main() -> None:
 
     if not session_procs:
         msg = "no session found"
-        raise ValueError(msg)
+        raise ProcessLookupError(msg)
     if len(session_procs) > 1:
         msg = "more than one session found"
-        raise ValueError(msg)
+        raise ProcessLookupError(msg)
 
     session = session_procs[0]
 
