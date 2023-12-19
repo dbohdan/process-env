@@ -31,7 +31,7 @@ def fish_quote(s: str) -> str:
     ).stdout.rstrip()
 
 
-def quote_var(name: str, value: str, *, shell: Shell) -> str:
+def set_var_command(name: str, value: str, *, shell: Shell) -> str:
     match shell:
         case "fish":
             return f"set -x {fish_quote(name)} {fish_quote(value)}"
@@ -74,7 +74,7 @@ def main() -> None:
 
     env = session.environ()
     for var in VARS:
-        print(quote_var(var, env[var], shell=shell))
+        print(set_var_command(var, env[var], shell=shell))
 
 
 if __name__ == "__main__":
