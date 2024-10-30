@@ -10,7 +10,6 @@ from typing import Literal, assert_never
 
 import psutil
 
-SESSION = "mate-session"
 VARS = ["DBUS_SESSION_BUS_ADDRESS", "DISPLAY", "SSH_AUTH_SOCK"]
 
 Shell = Literal["fish", "posix"]
@@ -43,10 +42,11 @@ def set_var_command(name: str, value: str, *, shell: Shell) -> str:
             assert_never(unreachable)
 
 
-def cli() -> Shell:
+def cli() -> tuple[Shell, str]:
     parser = argparse.ArgumentParser(
         description="Print shell commands to set environment variables like "
-        "`DISPLAY` to those of the current user's desktop session.",
+        "`DISPLAY` to those of another process, typically the current user's "
+        "desktop session.",
     )
 
     parser.add_argument(
@@ -55,24 +55,30 @@ def cli() -> Shell:
         help="what shell to print commands for",
     )
 
+    parser.add_argument(
+        "process_name",
+        help="what process to look up",
+        metavar="process-name",
+    )
+
     args = parser.parse_args()
-    return args.shell
+    return args.shell, args.process_name
 
 
 def main() -> None:
-    shell = cli()
+    shell, process_name = cli()
 
     username = os.environ["USER"]
-    session_procs = pgrep(username, SESSION)
+    session_processes = pgrep(username, process_name)
 
-    if not session_procs:
+    if not session_processes:
         msg = "no session found"
         raise ProcessLookupError(msg)
-    if len(session_procs) > 1:
+    if len(session_processes) > 1:
         msg = "more than one session found"
         raise ProcessLookupError(msg)
 
-    session = session_procs[0]
+    session = session_processes[0]
 
     env = session.environ()
     for var in VARS:
