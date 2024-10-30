@@ -18,7 +18,9 @@ Shell = Literal["fish", "posix"]
 
 def pgrep(user: str, proc_name: str) -> list[psutil.Process]:
     return [
-        p for p in psutil.process_iter() if p.username() == user and proc_name == p.name()
+        p
+        for p in psutil.process_iter()
+        if p.username() == user and proc_name == p.name()
     ]
 
 
