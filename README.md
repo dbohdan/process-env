@@ -31,15 +31,13 @@ It is known to **not work** on:
 
 ## Usage
 
-```none
-Usage: process-env [options] (pid|process-name) [var-name ...]
-```
+**process-env** [_options_] (_pid_|_process-name_) [_var-name_ ...]
 
 ### Options:
 
-- `-f`, `--fish`&thinsp;&mdash;&thinsp;output fish shell commands
-- `-j`, `--json`&thinsp;&mdash;&thinsp;output JSON
-- `-p`, `--posix`&thinsp;&mdash;&thinsp;output POSIX shell commands (default)
+- **-f**, **--fish**&thinsp;&mdash;&thinsp;output fish shell commands
+- **-j**, **--json**&thinsp;&mdash;&thinsp;output JSON
+- **-p**, **--posix**&thinsp;&mdash;&thinsp;output POSIX shell commands (default)
 
 ## Examples
 
