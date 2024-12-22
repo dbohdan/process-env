@@ -24,10 +24,11 @@ process-env is known to **work** on:
 - Linux
 - Windows 10
 
-It is known to **not work** on:
-- FreeBSD (getting the environment variables of a process isn't implemented in [gopsutils](https://github.com/shirou/gopsutil))
-- NetBSD (finding processes isn't implemented)
-- OpenBSD (getting the environment variables of a process isn't implemented)
+process-env (getting the environment variables of a process using [gopsutils](https://github.com/shirou/gopsutil)) is known to **not work** on:
+- FreeBSD
+- macOS
+- NetBSD
+- OpenBSD
 
 ## Usage
 
