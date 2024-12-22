@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/user"
@@ -18,10 +20,11 @@ type outputFormat int
 
 const (
 	fishShell outputFormat = iota
+	jsonObject
 	posixShell
 )
 
-var defaultEnvVars = []string{"DBUS_SESSION_BUS_ADDRESS", "DISPLAY", "SSH_AUTH_SOCK"}
+var defaultEnvVarNames = []string{"DBUS_SESSION_BUS_ADDRESS", "DISPLAY", "SSH_AUTH_SOCK"}
 
 func pgrep(user string, procName string) ([]*process.Process, error) {
 	processes, err := process.Processes()
@@ -71,19 +74,6 @@ func posixQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'"
 }
 
-func setVarCommand(name, value string, format outputFormat) (string, error) {
-	switch format {
-	case fishShell:
-		return fmt.Sprintf("set -x %s %s", fishQuote(name), fishQuote(value)), nil
-
-	case posixShell:
-		return fmt.Sprintf("export %s=%s", posixQuote(name), posixQuote(value)), nil
-
-	default:
-		return "", fmt.Errorf("unknown format")
-	}
-}
-
 func wrapForTerm(s string) string {
 	size, err := tsize.GetSize()
 	if err != nil {
@@ -96,18 +86,21 @@ func wrapForTerm(s string) string {
 func main() {
 	fish := false
 	posix := false
+	jsonObj := false
 	processName := ""
 
 	pflag.BoolVarP(&fish, "fish", "f", false, "output fish shell commands")
+	pflag.BoolVarP(&jsonObj, "json", "j", false, "output JSON")
 	pflag.BoolVarP(&posix, "posix", "p", false, "output POSIX shell commands (default)")
 
-	defaultEnvVarList := "  - " + strings.Join(defaultEnvVars, "\n  - ") + "\n"
+	defaultEnvVarList := "  - " + strings.Join(defaultEnvVarNames, "\n  - ") + "\n"
 
 	pflag.Usage = func() {
 		message := fmt.Sprintf(
 			"Usage: %s [options] process-name [var-name ...]\n\n"+
-				"Print shell commands to set environment variables to those of another process, "+
-				"typically the current user's desktop session.\n\n"+
+				"Print select environment variables of a process, "+
+				"typically the current user's desktop session, "+
+				"as shell commands to set those variables or as JSON.\n\n"+
 				"Default variables:\n%s\nOptions:",
 			filepath.Base(os.Args[0]),
 			defaultEnvVarList,
@@ -119,8 +112,18 @@ func main() {
 
 	pflag.Parse()
 
-	if fish && posix {
-		fmt.Fprintln(os.Stderr, "can't specify both `--fish` and `--posix`")
+	flags := 0
+	if fish {
+		flags++
+	}
+	if jsonObj {
+		flags++
+	}
+	if posix {
+		flags++
+	}
+	if flags > 1 {
+		fmt.Fprintln(os.Stderr, "can only specify one output format")
 		os.Exit(2)
 	}
 
@@ -132,13 +135,15 @@ func main() {
 	}
 
 	processName = args[0]
-	envVars := args[1:]
-	if len(envVars) == 0 {
-		envVars = defaultEnvVars
+	envVarNames := args[1:]
+	if len(envVarNames) == 0 {
+		envVarNames = defaultEnvVarNames
 	}
 	format := posixShell
 	if fish {
 		format = fishShell
+	} else if jsonObj {
+		format = jsonObject
 	}
 
 	user, err := user.Current()
@@ -182,15 +187,44 @@ func main() {
 		envMap[parts[0]] = parts[1]
 	}
 
-	for _, v := range envVars {
-		if val, ok := envMap[v]; ok {
-			cmd, err := setVarCommand(v, val, format)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error creating command: %v\n", err)
+	outputMap := make(map[string]string)
+	for _, name := range envVarNames {
+		if value, ok := envMap[name]; ok {
+			switch format {
+			case fishShell:
+				fmt.Printf("set -x %s %s\n", fishQuote(name), fishQuote(value))
+
+			case jsonObject:
+				outputMap[name] = value
+
+			case posixShell:
+				fmt.Printf("export %s=%s\n", posixQuote(name), posixQuote(value))
+			default:
+				fmt.Fprintf(os.Stderr, "unknown format")
 				os.Exit(1)
 			}
-
-			fmt.Println(cmd)
 		}
+	}
+
+	if format == jsonObject {
+		b, err := json.Marshal(outputMap)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to marshal to JSON: %v", err)
+			os.Exit(1)
+		}
+
+		var out bytes.Buffer
+		err = json.Indent(&out, b, "", "    ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to ident JSON: %v", err)
+			os.Exit(1)
+		}
+		_, err = out.WriteTo(os.Stdout)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write to stdout: %v", err)
+			os.Exit(1)
+		}
+
+		fmt.Println()
 	}
 }
