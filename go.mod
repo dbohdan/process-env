@@ -3,6 +3,7 @@ module github.com/dbohdan/process-env
 go 1.22
 
 require (
+	github.com/alecthomas/repr v0.4.0
 	github.com/cornfeedhobo/pflag v1.1.0
 	github.com/kopoli/go-terminal-size v0.0.0-20170219200355-5c97524c8b54
 	github.com/mitchellh/go-wordwrap v1.0.1

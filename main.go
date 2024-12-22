@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/cornfeedhobo/pflag"
@@ -87,7 +88,6 @@ func main() {
 	fish := false
 	posix := false
 	jsonObj := false
-	processName := ""
 
 	pflag.BoolVarP(&fish, "fish", "f", false, "output fish shell commands")
 	pflag.BoolVarP(&jsonObj, "json", "j", false, "output JSON")
@@ -97,7 +97,7 @@ func main() {
 
 	pflag.Usage = func() {
 		message := fmt.Sprintf(
-			"Usage: %s [options] process-name [var-name ...]\n\n"+
+			"Usage: %s [options] (pid|process-name) [var-name ...]\n\n"+
 				"Print select environment variables of a process, "+
 				"typically the current user's desktop session, "+
 				"as shell commands to set those variables or as JSON.\n\n"+
@@ -130,11 +130,11 @@ func main() {
 	args := pflag.Args()
 
 	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "process name is required")
+		fmt.Fprintln(os.Stderr, "process name or PID is required")
 		os.Exit(2)
 	}
 
-	processName = args[0]
+	processNameOrPid := args[0]
 	envVarNames := args[1:]
 	if len(envVarNames) == 0 {
 		envVarNames = defaultEnvVarNames
@@ -152,24 +152,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	processes, err := pgrep(user.Username, processName)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error finding processes: %v\n", err)
-		os.Exit(1)
+	var targetProcess *process.Process
+	pid, err := strconv.ParseInt(processNameOrPid, 10, 32)
+	if err == nil {
+		targetProcess, err = process.NewProcess(int32(pid))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error finding process with PID %d: %v\n", pid, err)
+			os.Exit(1)
+		}
+	} else {
+		processes, err := pgrep(user.Username, processNameOrPid)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error finding processes: %v\n", err)
+			os.Exit(1)
+		}
+
+		if len(processes) == 0 {
+			fmt.Fprintln(os.Stderr, "no process found")
+			os.Exit(1)
+		}
+
+		if len(processes) > 1 {
+			fmt.Fprintln(os.Stderr, "more than one process found")
+			os.Exit(1)
+		}
+
+		targetProcess = processes[0]
 	}
 
-	if len(processes) == 0 {
-		fmt.Fprintln(os.Stderr, "no process found")
-		os.Exit(1)
-	}
-
-	if len(processes) > 1 {
-		fmt.Fprintln(os.Stderr, "more than one process found")
-		os.Exit(1)
-	}
-
-	process := processes[0]
-	env, err := process.Environ()
+	env, err := environ(targetProcess)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error getting process environment: %v\n", err)
 		os.Exit(1)

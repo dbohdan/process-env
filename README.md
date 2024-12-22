@@ -1,8 +1,7 @@
 # process-env
 
-**process-env** prints select environment variables of a process, typically the current user's
-desktop session, as shell commands to set those variables or as JSON.
-This is useful, e.g., for accessing an [ssh-agent](https://en.wikipedia.org/wiki/Ssh-agent) started for your desktop session in remote sessions.
+**process-env** prints select environment variables of a process, typically the current user's desktop session, as shell commands to set those variables or as JSON.
+This is useful if you want to access an [ssh-agent](https://en.wikipedia.org/wiki/Ssh-agent) started for your desktop session in a remote session and in similar scenarios.
 
 The default environment variables are as follows:
 
@@ -21,11 +20,11 @@ go install github.com/dbohdan.com/process-env@master
 ## Compatibility
 
 process-env is known to **work** on:
+- FreeBSD 14
 - Linux
 - Windows 10
 
-process-env (getting the environment variables of a process using [gopsutils](https://github.com/shirou/gopsutil)) is known to **not work** on:
-- FreeBSD
+It is known to **not work** on:
 - macOS
 - NetBSD
 - OpenBSD
@@ -33,7 +32,7 @@ process-env (getting the environment variables of a process using [gopsutils](ht
 ## Usage
 
 ```none
-Usage: process-env [options] process-name [var-name ...]
+Usage: process-env [options] (pid|process-name) [var-name ...]
 ```
 
 ### Options:
@@ -50,7 +49,7 @@ Get the default environment variables from a [MATE](https://en.wikipedia.org/wik
 process-env mate-session
 ```
 
-Get just the `DISPLAY` environment variable from a [KDE Plasma](https://en.wikipedia.org/wiki/KDE_Plasma) shell process using fish syntax:
+Get only the `DISPLAY` environment variable from a [KDE Plasma](https://en.wikipedia.org/wiki/KDE_Plasma) shell process using fish syntax:
 
 ```shell
 process-env -f plasmashell DISPLAY
