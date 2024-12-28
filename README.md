@@ -14,7 +14,7 @@ The default environment variables are as follows:
 You will need Go 1.22.
 
 ```shell
-go install github.com/dbohdan.com/process-env@master
+go install dbohdan.com/process-env@master
 ```
 
 ## Compatibility

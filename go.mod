@@ -1,4 +1,4 @@
-module github.com/dbohdan/process-env
+module dbohdan.com/process-env
 
 go 1.22
 
