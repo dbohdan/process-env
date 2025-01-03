@@ -186,7 +186,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Convert a slice of `KEY=VALUE` strings to a map of keys to values.
+	// Convert a slice of "KEY=VALUE" strings to a map of keys to values.
 	envMap := make(map[string]string)
 	for _, e := range env {
 		parts := strings.SplitN(e, "=", 2)

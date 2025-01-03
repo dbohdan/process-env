@@ -28,7 +28,7 @@ func environ(process *process.Process) ([]string, error) {
 	}
 
 	// Convert the PID to string for both the command and the later map lookup.
-	// Do *not* use `string(process.Pid)`.
+	// Do *not* use string(process.Pid).
 	// With an int32, this produces a Unicode character.
 	pidStr := strconv.Itoa(int(process.Pid))
 
