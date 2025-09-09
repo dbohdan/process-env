@@ -91,23 +91,29 @@ func wrapForTerm(s string) string {
 }
 
 func main() {
+	all := false
 	fish := false
 	posix := false
 	jsonObj := false
 
+	pflag.BoolVarP(&all, "all", "a", false, "output all environment variables")
 	pflag.BoolVarP(&fish, "fish", "f", false, "output fish shell commands")
 	pflag.BoolVarP(&jsonObj, "json", "j", false, "output JSON")
 	pflag.BoolVarP(&posix, "posix", "p", false, "output POSIX shell commands (default)")
 
-	defaultEnvVarList := "  - " + strings.Join(defaultEnvVarNames, "\n  - ") + "\n"
+	defaultEnvVarList := "  - " + strings.Join(defaultEnvVarNames, "\n  - ")
 
 	pflag.Usage = func() {
-		message := fmt.Sprintf(
-			"Usage: %s [options] (pid|process-name) [var-name ...]\n\n"+
-				"Print select environment variables of a process, "+
-				"typically the current user's desktop session, "+
-				"as shell commands to set those variables or as JSON.\n\n"+
-				"Default variables:\n%s\nOptions:",
+		message := fmt.Sprintf(`Usage: %s [options] (pid|process-name) [var-name ...]
+
+Print the environment variables of a process, typically the current user's desktop session, as shell commands to set those variables or as JSON.
+
+Default variables:
+%s
+
+Specifying one or more variable names overrides the default list.
+
+Options:`,
 			filepath.Base(os.Args[0]),
 			defaultEnvVarList,
 		)
@@ -141,10 +147,15 @@ func main() {
 	}
 
 	processNameOrPid := args[0]
-	envVarNames := args[1:]
-	if len(envVarNames) == 0 {
-		envVarNames = defaultEnvVarNames
+
+	envVarNames := []string{}
+	if !all {
+		envVarNames = args[1:]
+		if len(envVarNames) == 0 {
+			envVarNames = defaultEnvVarNames
+		}
 	}
+
 	format := posixShell
 	if fish {
 		format = fishShell
@@ -202,6 +213,10 @@ func main() {
 		}
 
 		envMap[parts[0]] = parts[1]
+
+		if all {
+			envVarNames = append(envVarNames, parts[0])
+		}
 	}
 
 	outputMap := make(map[string]string)

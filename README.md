@@ -1,9 +1,10 @@
 # process-env
 
-**process-env** prints select environment variables of a process, typically the current user's desktop session, as shell commands to set those variables or as JSON.
+**process-env** prints the environment variables of a process, typically the current user's desktop session, as shell commands to set those variables or as JSON.
 This is useful if you want to access an [ssh-agent](https://en.wikipedia.org/wiki/Ssh-agent) started for your desktop session in a remote session and in similar scenarios.
 
-The default environment variables are as follows:
+process-env can output specific or all environment variables of a process.
+The default environment variables are:
 
 - `DBUS_SESSION_BUS_ADDRESS`
 - `DISPLAY`
@@ -35,8 +36,11 @@ It is known to **not work** on:
 
 **process-env** [_options_] (_pid_|_process-name_) [_var-name_ ...]
 
+Specifying one or more variable names overrides the default list.
+
 ### Options:
 
+- **-a**, **--all**&thinsp;&mdash;&thinsp;output all environment variables
 - **-f**, **--fish**&thinsp;&mdash;&thinsp;output fish shell commands
 - **-j**, **--json**&thinsp;&mdash;&thinsp;output JSON
 - **-p**, **--posix**&thinsp;&mdash;&thinsp;output POSIX shell commands (default)
