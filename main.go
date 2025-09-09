@@ -25,7 +25,13 @@ const (
 	posixShell
 )
 
-var defaultEnvVarNames = []string{"DBUS_SESSION_BUS_ADDRESS", "DISPLAY", "SSH_AUTH_SOCK"}
+var defaultEnvVarNames = []string{
+	"DBUS_SESSION_BUS_ADDRESS",
+	"DISPLAY",
+	"SSH_AUTH_SOCK",
+	"WAYLAND_DISPLAY",
+	"XDG_RUNTIME_DIR",
+}
 
 func pgrep(user string, procName string) ([]*process.Process, error) {
 	processes, err := process.Processes()

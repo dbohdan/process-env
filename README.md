@@ -8,6 +8,8 @@ The default environment variables are as follows:
 - `DBUS_SESSION_BUS_ADDRESS`
 - `DISPLAY`
 - `SSH_AUTH_SOCK`
+- `WAYLAND_DISPLAY`
+- `XDG_RUNTIME_DIR`
 
 ## Installation
 
