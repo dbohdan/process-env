@@ -12,9 +12,9 @@ import (
 	"strings"
 
 	"github.com/cornfeedhobo/pflag"
-	tsize "github.com/kopoli/go-terminal-size"
 	"github.com/mitchellh/go-wordwrap"
 	"github.com/shirou/gopsutil/v3/process"
+	"golang.org/x/term"
 )
 
 type outputFormat int
@@ -82,12 +82,12 @@ func posixQuote(s string) string {
 }
 
 func wrapForTerm(s string) string {
-	size, err := tsize.GetSize()
+	width, _, err := term.GetSize(int(os.Stdin.Fd()))
 	if err != nil {
 		return s
 	}
 
-	return wordwrap.WrapString(s, uint(size.Width))
+	return wordwrap.WrapString(s, uint(width))
 }
 
 func main() {
